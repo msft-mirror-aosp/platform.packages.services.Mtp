@@ -204,8 +204,12 @@ public class MtpService extends Service {
 
             // Add currently mounted and enabled storages to the server
             if (mUnlocked) {
-                for (StorageVolume v : mVolumeMap.values()) {
-                    addStorage(v);
+                if (mPtpMode) {
+                    addStorage(primary);
+                } else {
+                    for (StorageVolume v : mVolumeMap.values()) {
+                        addStorage(v);
+                    }
                 }
             }
             server.start();
