@@ -16,20 +16,24 @@
 
 package com.android.mtp;
 
+import static com.android.mtp.MtpDatabase.strings;
+import static com.android.mtp.TestUtil.OPERATIONS_SUPPORTED;
+
 import android.database.Cursor;
 import android.mtp.MtpConstants;
 import android.mtp.MtpObjectInfo;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 import android.os.storage.StorageManager;
+import android.provider.DocumentsContract;
 import android.provider.DocumentsContract.Document;
 import android.provider.DocumentsContract.Path;
 import android.provider.DocumentsContract.Root;
 import android.system.Os;
 import android.system.OsConstants;
-import android.provider.DocumentsContract;
 import android.test.AndroidTestCase;
-import android.test.suitebuilder.annotation.MediumTest;
+
+import androidx.test.filters.MediumTest;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -37,9 +41,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.TimeoutException;
-
-import static com.android.mtp.MtpDatabase.strings;
-import static com.android.mtp.TestUtil.OPERATIONS_SUPPORTED;
 
 @MediumTest
 public class MtpDocumentsProviderTest extends AndroidTestCase {
