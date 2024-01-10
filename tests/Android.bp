@@ -10,7 +10,10 @@ android_test {
         "android.test.base",
         "android.test.mock",
     ],
-    static_libs: ["junit"],
+    static_libs: [
+        "junit",
+        "androidx.test.rules",
+    ],
     platform_apis: true,
     instrumentation_for: "MtpService",
     certificate: "media",
