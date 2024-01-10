@@ -16,9 +16,13 @@
 
 package com.android.mtp;
 
+import static android.provider.DocumentsContract.Document.*;
+
+import static com.android.mtp.MtpDatabase.strings;
+import static com.android.mtp.MtpDatabaseConstants.*;
+import static com.android.mtp.TestUtil.OPERATIONS_SUPPORTED;
+
 import android.database.Cursor;
-import android.media.MediaFile;
-import android.media.MediaFile.MediaFileType;
 import android.mtp.MtpConstants;
 import android.mtp.MtpObjectInfo;
 import android.net.Uri;
@@ -26,15 +30,10 @@ import android.provider.DocumentsContract;
 import android.provider.DocumentsContract.Document;
 import android.provider.DocumentsContract.Root;
 import android.test.AndroidTestCase;
-import android.test.suitebuilder.annotation.SmallTest;
+
+import androidx.test.filters.SmallTest;
 
 import java.io.FileNotFoundException;
-import java.util.Arrays;
-
-import static android.provider.DocumentsContract.Document.*;
-import static com.android.mtp.MtpDatabase.strings;
-import static com.android.mtp.MtpDatabaseConstants.*;
-import static com.android.mtp.TestUtil.OPERATIONS_SUPPORTED;
 
 @SmallTest
 public class MtpDatabaseTest extends AndroidTestCase {
