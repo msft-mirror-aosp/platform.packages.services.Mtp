@@ -1,4 +1,5 @@
 package {
+    default_team: "trendy_team_android_usb",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
@@ -10,7 +11,10 @@ android_test {
         "android.test.base",
         "android.test.mock",
     ],
-    static_libs: ["junit"],
+    static_libs: [
+        "junit",
+        "androidx.test.rules",
+    ],
     platform_apis: true,
     instrumentation_for: "MtpService",
     certificate: "media",

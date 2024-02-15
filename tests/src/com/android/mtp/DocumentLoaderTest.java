@@ -21,9 +21,9 @@ import android.database.Cursor;
 import android.mtp.MtpObjectInfo;
 import android.net.Uri;
 import android.provider.DocumentsContract;
-import android.provider.DocumentsContract.Document;
 import android.test.AndroidTestCase;
-import android.test.suitebuilder.annotation.MediumTest;
+
+import androidx.test.filters.MediumTest;
 
 import java.io.IOException;
 import java.util.HashMap;
