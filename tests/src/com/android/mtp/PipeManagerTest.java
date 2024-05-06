@@ -18,7 +18,8 @@ package com.android.mtp;
 
 import android.os.ParcelFileDescriptor;
 import android.test.AndroidTestCase;
-import android.test.suitebuilder.annotation.MediumTest;
+
+import androidx.test.filters.MediumTest;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
