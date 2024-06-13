@@ -57,7 +57,9 @@ public class MtpDocumentsService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         // If intent is null, the service was restarted.
-        if (intent == null || ACTION_UPDATE_NOTIFICATION.equals(intent.getAction())) {
+        if (intent == null) {
+            updateForegroundState(null, null);
+        } else if (ACTION_UPDATE_NOTIFICATION.equals(intent.getAction())) {
             final int[] ids = intent.hasExtra(EXTRA_DEVICE_IDS) ?
                     intent.getExtras().getIntArray(EXTRA_DEVICE_IDS) : null;
             final Notification[] notifications = intent.hasExtra(EXTRA_DEVICE_NOTIFICATIONS) ?
