@@ -66,6 +66,8 @@
             </intent-filter>
         </receiver>
 
-        <service android:name="MtpService"/>
+        <service android:name="MtpService"
+                 android:permission="android.permission.MANAGE_USB"
+                 android:exported="true"/>
     </application>
 </manifest>
