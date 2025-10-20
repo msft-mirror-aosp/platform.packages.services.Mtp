@@ -23,6 +23,8 @@ import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
+
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
@@ -30,6 +32,7 @@ import com.android.internal.util.Preconditions;
  * Sends intent to MtpDocumentsService.
  */
 class ServiceIntentSender {
+    private final static String TAG = "ServiceIntentSender";
     private final static String CHANNEL_ID = "device_notification_channel";
     private final Context mContext;
 
@@ -71,7 +74,15 @@ class ServiceIntentSender {
             intent.putExtra(MtpDocumentsService.EXTRA_DEVICE_NOTIFICATIONS, notifications);
             mContext.startForegroundService(intent);
         } else {
-            mContext.startService(intent);
+            // TODO(b/450591015): Use WorkManager to handle stopping the service from the background
+            // This is a short-term fix to prevent a crash from trying to start a service in the
+            // background. A long-term solution should use WorkManager to handle this task.
+            try {
+                mContext.startService(intent);
+            } catch (IllegalStateException e) {
+                // It is not guaranteed that we can start service from background.
+                Log.w(TAG, "Failed to send update notification intent", e);
+            }
         }
     }
 
