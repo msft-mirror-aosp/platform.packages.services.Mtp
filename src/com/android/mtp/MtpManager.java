@@ -39,6 +39,7 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.util.ArrayList;
 
 /**
@@ -46,6 +47,14 @@ import java.util.ArrayList;
  */
 class MtpManager {
     final static int OBJECT_HANDLE_ROOT_CHILDREN = -1;
+
+    private static final int RETRY_COUNT = 3;
+    private static final int RETRY_DELAY_MS = 50;
+
+    @FunctionalInterface
+    private interface SupplierWithIOException<T> {
+        T get() throws IOException;
+    }
 
     /**
      * Subclass for PTP.
@@ -104,8 +113,9 @@ class MtpManager {
         }
 
         // Handle devices that fail to obtain storages just after opening a MTP session.
-        final int[] storageIds = ensureNotNull(
-                device.getStorageIds(),
+        // We discard the result because this is used as a liveness check during device opening.
+        runWithRetry(device,
+                () -> device.getStorageIds(),
                 "Not found MTP storages in the device.");
 
         mDevices.put(deviceId, device);
@@ -133,31 +143,25 @@ class MtpManager {
 
     MtpObjectInfo getObjectInfo(int deviceId, int objectHandle) throws IOException {
         final MtpDevice device = getDevice(deviceId);
-        synchronized (device) {
-            return ensureNotNull(
-                    device.getObjectInfo(objectHandle),
-                    "Failed to get object info: " + objectHandle);
-        }
+        return runWithRetry(device,
+                () -> device.getObjectInfo(objectHandle),
+                "Failed to get object info: " + objectHandle);
     }
 
     int[] getObjectHandles(int deviceId, int storageId, int parentObjectHandle)
             throws IOException {
         final MtpDevice device = getDevice(deviceId);
-        synchronized (device) {
-            return ensureNotNull(
-                    device.getObjectHandles(storageId, 0 /* all format */, parentObjectHandle),
-                    "Failed to fetch object handles.");
-        }
+        return runWithRetry(device,
+                () -> device.getObjectHandles(storageId, 0 /* all format */, parentObjectHandle),
+                "Failed to fetch object handles.");
     }
 
     byte[] getObject(int deviceId, int objectHandle, int expectedSize)
             throws IOException {
         final MtpDevice device = getDevice(deviceId);
-        synchronized (device) {
-            return ensureNotNull(
-                    device.getObject(objectHandle, expectedSize),
-                    "Failed to fetch object bytes");
-        }
+        return runWithRetry(device,
+                () -> device.getObject(objectHandle, expectedSize),
+                "Failed to fetch object bytes");
     }
 
     long getPartialObject(int deviceId, int objectHandle, long offset, long size, byte[] buffer)
@@ -178,11 +182,9 @@ class MtpManager {
 
     byte[] getThumbnail(int deviceId, int objectHandle) throws IOException {
         final MtpDevice device = getDevice(deviceId);
-        synchronized (device) {
-            return ensureNotNull(
-                    device.getThumbnail(objectHandle),
-                    "Failed to obtain thumbnail bytes");
-        }
+        return runWithRetry(device,
+                () -> device.getThumbnail(objectHandle),
+                "Failed to obtain thumbnail bytes");
     }
 
     void deleteDocument(int deviceId, int objectHandle) throws IOException {
@@ -252,19 +254,21 @@ class MtpManager {
 
     private MtpRoot[] getRoots(int deviceId) throws IOException {
         final MtpDevice device = getDevice(deviceId);
-        synchronized (device) {
-            final int[] storageIds =
-                    ensureNotNull(device.getStorageIds(), "Failed to obtain storage IDs.");
-            final ArrayList<MtpRoot> roots = new ArrayList<>();
-            for (int i = 0; i < storageIds.length; i++) {
-                final MtpStorageInfo info = device.getStorageInfo(storageIds[i]);
-                if (info == null) {
-                    continue;
-                }
+        final int[] storageIds = runWithRetry(device,
+                () -> device.getStorageIds(), "Failed to obtain storage IDs.");
+        final ArrayList<MtpRoot> roots = new ArrayList<>();
+        for (int i = 0; i < storageIds.length; i++) {
+            final int storageId = storageIds[i];
+            try {
+                final MtpStorageInfo info = runWithRetry(device,
+                        () -> device.getStorageInfo(storageId),
+                        "Failed to obtain storage info: " + storageId);
                 roots.add(new MtpRoot(device.getDeviceId(), info));
+            } catch (IOException e) {
+                Log.e(MtpDocumentsProvider.TAG, "Failed to load storage info, skipping.", e);
             }
-            return roots.toArray(new MtpRoot[roots.size()]);
         }
+        return roots.toArray(new MtpRoot[roots.size()]);
     }
 
     private void setInitVersion(UsbDevice device) {
@@ -345,5 +349,32 @@ class MtpManager {
         } else {
             throw new IOException(errorMessage);
         }
+    }
+
+    private <T> T runWithRetry(MtpDevice device, SupplierWithIOException<T> supplier,
+            String errorMessage) throws IOException {
+        int retries = RETRY_COUNT;
+        while (retries > 0) {
+            T result;
+            synchronized (device) {
+                result = supplier.get();
+            }
+            if (result != null) {
+                return result;
+            }
+            retries--;
+            if (retries > 0) {
+                Log.w(MtpDocumentsProvider.TAG, errorMessage + " Retrying... (" + retries + ")");
+                try {
+                    Thread.sleep(RETRY_DELAY_MS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new InterruptedIOException(errorMessage + " Interrupted during retry.");
+                }
+            }
+
+        }
+        Log.e(MtpDocumentsProvider.TAG, errorMessage);
+        throw new IOException(errorMessage);
     }
 }
