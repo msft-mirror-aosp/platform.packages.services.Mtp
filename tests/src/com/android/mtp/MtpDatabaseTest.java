@@ -87,8 +87,7 @@ public class MtpDatabaseTest extends AndroidTestCase {
         });
         mDatabase.getMapper().stopAddingDocuments("1");
 
-        {
-            final Cursor cursor = mDatabase.queryRootDocuments(COLUMN_NAMES);
+        try (final Cursor cursor = mDatabase.queryRootDocuments(COLUMN_NAMES)) {
             assertEquals(1, cursor.getCount());
 
             cursor.moveToNext();
@@ -97,7 +96,8 @@ public class MtpDatabaseTest extends AndroidTestCase {
             assertEquals(1, getInt(cursor, COLUMN_STORAGE_ID));
             assertTrue(isNull(cursor, COLUMN_OBJECT_HANDLE));
             assertEquals(
-                    DocumentsContract.Document.MIME_TYPE_DIR, getString(cursor, COLUMN_MIME_TYPE));
+                    DocumentsContract.Document.MIME_TYPE_DIR,
+                    getString(cursor, COLUMN_MIME_TYPE));
             assertEquals("Storage", getString(cursor, COLUMN_DISPLAY_NAME));
             assertTrue(isNull(cursor, COLUMN_SUMMARY));
             assertTrue(isNull(cursor, COLUMN_LAST_MODIFIED));
@@ -107,12 +107,9 @@ public class MtpDatabaseTest extends AndroidTestCase {
             assertEquals(
                     MtpDatabaseConstants.DOCUMENT_TYPE_STORAGE,
                     getInt(cursor, COLUMN_DOCUMENT_TYPE));
-
-            cursor.close();
         }
 
-        {
-            final Cursor cursor = mDatabase.queryRoots(resources, new String [] {
+        try (final Cursor cursor = mDatabase.queryRoots(resources, new String [] {
                     Root.COLUMN_ROOT_ID,
                     Root.COLUMN_FLAGS,
                     Root.COLUMN_ICON,
@@ -121,7 +118,7 @@ public class MtpDatabaseTest extends AndroidTestCase {
                     Root.COLUMN_DOCUMENT_ID,
                     Root.COLUMN_AVAILABLE_BYTES,
                     Root.COLUMN_CAPACITY_BYTES
-            });
+            })) {
             assertEquals(1, cursor.getCount());
 
             cursor.moveToNext();
@@ -135,8 +132,6 @@ public class MtpDatabaseTest extends AndroidTestCase {
             assertEquals(1, getInt(cursor, Root.COLUMN_DOCUMENT_ID));
             assertEquals(1000, getInt(cursor, Root.COLUMN_AVAILABLE_BYTES));
             assertEquals(2000, getInt(cursor, Root.COLUMN_CAPACITY_BYTES));
-
-            cursor.close();
         }
     }
 
@@ -150,8 +145,7 @@ public class MtpDatabaseTest extends AndroidTestCase {
                 new MtpRoot(0, 3, "/@#%&<>Storage", 3000, 6000,"")
         });
 
-        {
-            final Cursor cursor = mDatabase.queryRootDocuments(COLUMN_NAMES);
+        try (final Cursor cursor = mDatabase.queryRootDocuments(COLUMN_NAMES)) {
             assertEquals(3, cursor.getCount());
 
             cursor.moveToNext();
@@ -159,7 +153,9 @@ public class MtpDatabaseTest extends AndroidTestCase {
             assertEquals(0, getInt(cursor, COLUMN_DEVICE_ID));
             assertEquals(1, getInt(cursor, COLUMN_STORAGE_ID));
             assertTrue(isNull(cursor, COLUMN_OBJECT_HANDLE));
-            assertEquals(DocumentsContract.Document.MIME_TYPE_DIR, getString(cursor, COLUMN_MIME_TYPE));
+            assertEquals(
+                    DocumentsContract.Document.MIME_TYPE_DIR,
+                    getString(cursor, COLUMN_MIME_TYPE));
             assertEquals("Storage", getString(cursor, COLUMN_DISPLAY_NAME));
             assertTrue(isNull(cursor, COLUMN_SUMMARY));
             assertTrue(isNull(cursor, COLUMN_LAST_MODIFIED));
@@ -167,7 +163,8 @@ public class MtpDatabaseTest extends AndroidTestCase {
             assertEquals(Document.FLAG_DIR_SUPPORTS_CREATE, getInt(cursor, COLUMN_FLAGS));
             assertEquals(1000, getInt(cursor, COLUMN_SIZE));
             assertEquals(
-                    MtpDatabaseConstants.DOCUMENT_TYPE_STORAGE, getInt(cursor, COLUMN_DOCUMENT_TYPE));
+                    MtpDatabaseConstants.DOCUMENT_TYPE_STORAGE,
+                    getInt(cursor, COLUMN_DOCUMENT_TYPE));
 
             cursor.moveToNext();
             assertEquals(3, getInt(cursor, COLUMN_DOCUMENT_ID));
@@ -176,8 +173,6 @@ public class MtpDatabaseTest extends AndroidTestCase {
             cursor.moveToNext();
             assertEquals(4, getInt(cursor, COLUMN_DOCUMENT_ID));
             assertEquals("/@#%&<>Storage", getString(cursor, COLUMN_DISPLAY_NAME));
-
-            cursor.close();
         }
     }
 
@@ -201,68 +196,70 @@ public class MtpDatabaseTest extends AndroidTestCase {
                 createDocument(102, "music.mp3", MtpConstants.FORMAT_MP3, 3 * 1024 * 1024)
         }, new long[] { 1024L, 2L * 1024L * 1024L, 3L * 1024L * 1024L});
 
-        final Cursor cursor = mDatabase.queryChildDocuments(COLUMN_NAMES, "2");
-        assertEquals(3, cursor.getCount());
+        try (final Cursor cursor = mDatabase.queryChildDocuments(COLUMN_NAMES, "2")) {
+            assertEquals(3, cursor.getCount());
 
-        cursor.moveToNext();
-        assertEquals(3, getInt(cursor, COLUMN_DOCUMENT_ID));
-        assertEquals(0, getInt(cursor, COLUMN_DEVICE_ID));
-        assertEquals(0, getInt(cursor, COLUMN_STORAGE_ID));
-        assertEquals(100, getInt(cursor, COLUMN_OBJECT_HANDLE));
-        assertEquals("text/plain", getString(cursor, COLUMN_MIME_TYPE));
-        assertEquals("note.txt", getString(cursor, COLUMN_DISPLAY_NAME));
-        assertTrue(isNull(cursor, COLUMN_SUMMARY));
-        assertTrue(isNull(cursor, COLUMN_LAST_MODIFIED));
-        assertTrue(isNull(cursor, COLUMN_ICON));
-        assertEquals(
-                COLUMN_FLAGS,
-                DocumentsContract.Document.FLAG_SUPPORTS_DELETE |
-                DocumentsContract.Document.FLAG_SUPPORTS_WRITE,
-                cursor.getInt(9));
-        assertEquals(1024, getInt(cursor, COLUMN_SIZE));
-        assertEquals(
-                MtpDatabaseConstants.DOCUMENT_TYPE_OBJECT, getInt(cursor, COLUMN_DOCUMENT_TYPE));
+            cursor.moveToNext();
+            assertEquals(3, getInt(cursor, COLUMN_DOCUMENT_ID));
+            assertEquals(0, getInt(cursor, COLUMN_DEVICE_ID));
+            assertEquals(0, getInt(cursor, COLUMN_STORAGE_ID));
+            assertEquals(100, getInt(cursor, COLUMN_OBJECT_HANDLE));
+            assertEquals("text/plain", getString(cursor, COLUMN_MIME_TYPE));
+            assertEquals("note.txt", getString(cursor, COLUMN_DISPLAY_NAME));
+            assertTrue(isNull(cursor, COLUMN_SUMMARY));
+            assertTrue(isNull(cursor, COLUMN_LAST_MODIFIED));
+            assertTrue(isNull(cursor, COLUMN_ICON));
+            assertEquals(
+                    COLUMN_FLAGS,
+                    DocumentsContract.Document.FLAG_SUPPORTS_DELETE |
+                    DocumentsContract.Document.FLAG_SUPPORTS_WRITE,
+                    cursor.getInt(9));
+            assertEquals(1024, getInt(cursor, COLUMN_SIZE));
+            assertEquals(
+                    MtpDatabaseConstants.DOCUMENT_TYPE_OBJECT,
+                    getInt(cursor, COLUMN_DOCUMENT_TYPE));
 
-        cursor.moveToNext();
-        assertEquals(4, getInt(cursor, COLUMN_DOCUMENT_ID));
-        assertEquals(0, getInt(cursor, COLUMN_DEVICE_ID));
-        assertEquals(0, getInt(cursor, COLUMN_STORAGE_ID));
-        assertEquals(101, getInt(cursor, COLUMN_OBJECT_HANDLE));
-        assertEquals("image/jpeg", getString(cursor, COLUMN_MIME_TYPE));
-        assertEquals("image.jpg", getString(cursor, COLUMN_DISPLAY_NAME));
-        assertTrue(isNull(cursor, COLUMN_SUMMARY));
-        assertTrue(isNull(cursor, COLUMN_LAST_MODIFIED));
-        assertTrue(isNull(cursor, COLUMN_ICON));
-        assertEquals(
-                COLUMN_FLAGS,
-                DocumentsContract.Document.FLAG_SUPPORTS_DELETE |
-                DocumentsContract.Document.FLAG_SUPPORTS_WRITE |
-                DocumentsContract.Document.FLAG_SUPPORTS_METADATA,
-                cursor.getInt(9));
-        assertEquals(2 * 1024 * 1024, getInt(cursor, COLUMN_SIZE));
-        assertEquals(
-                MtpDatabaseConstants.DOCUMENT_TYPE_OBJECT, getInt(cursor, COLUMN_DOCUMENT_TYPE));
+            cursor.moveToNext();
+            assertEquals(4, getInt(cursor, COLUMN_DOCUMENT_ID));
+            assertEquals(0, getInt(cursor, COLUMN_DEVICE_ID));
+            assertEquals(0, getInt(cursor, COLUMN_STORAGE_ID));
+            assertEquals(101, getInt(cursor, COLUMN_OBJECT_HANDLE));
+            assertEquals("image/jpeg", getString(cursor, COLUMN_MIME_TYPE));
+            assertEquals("image.jpg", getString(cursor, COLUMN_DISPLAY_NAME));
+            assertTrue(isNull(cursor, COLUMN_SUMMARY));
+            assertTrue(isNull(cursor, COLUMN_LAST_MODIFIED));
+            assertTrue(isNull(cursor, COLUMN_ICON));
+            assertEquals(
+                    COLUMN_FLAGS,
+                    DocumentsContract.Document.FLAG_SUPPORTS_DELETE |
+                    DocumentsContract.Document.FLAG_SUPPORTS_WRITE |
+                    DocumentsContract.Document.FLAG_SUPPORTS_METADATA,
+                    cursor.getInt(9));
+            assertEquals(2 * 1024 * 1024, getInt(cursor, COLUMN_SIZE));
+            assertEquals(
+                    MtpDatabaseConstants.DOCUMENT_TYPE_OBJECT,
+                    getInt(cursor, COLUMN_DOCUMENT_TYPE));
 
-        cursor.moveToNext();
-        assertEquals(5, getInt(cursor, COLUMN_DOCUMENT_ID));
-        assertEquals(0, getInt(cursor, COLUMN_DEVICE_ID));
-        assertEquals(0, getInt(cursor, COLUMN_STORAGE_ID));
-        assertEquals(102, getInt(cursor, COLUMN_OBJECT_HANDLE));
-        assertEquals("audio/mpeg", getString(cursor, COLUMN_MIME_TYPE));
-        assertEquals("music.mp3", getString(cursor, COLUMN_DISPLAY_NAME));
-        assertTrue(isNull(cursor, COLUMN_SUMMARY));
-        assertTrue(isNull(cursor, COLUMN_LAST_MODIFIED));
-        assertTrue(isNull(cursor, COLUMN_ICON));
-        assertEquals(
-                COLUMN_FLAGS,
-                DocumentsContract.Document.FLAG_SUPPORTS_DELETE |
-                DocumentsContract.Document.FLAG_SUPPORTS_WRITE,
-                cursor.getInt(9));
-        assertEquals(3 * 1024 * 1024, getInt(cursor, COLUMN_SIZE));
-        assertEquals(
-                MtpDatabaseConstants.DOCUMENT_TYPE_OBJECT, getInt(cursor, COLUMN_DOCUMENT_TYPE));
-
-        cursor.close();
+            cursor.moveToNext();
+            assertEquals(5, getInt(cursor, COLUMN_DOCUMENT_ID));
+            assertEquals(0, getInt(cursor, COLUMN_DEVICE_ID));
+            assertEquals(0, getInt(cursor, COLUMN_STORAGE_ID));
+            assertEquals(102, getInt(cursor, COLUMN_OBJECT_HANDLE));
+            assertEquals("audio/mpeg", getString(cursor, COLUMN_MIME_TYPE));
+            assertEquals("music.mp3", getString(cursor, COLUMN_DISPLAY_NAME));
+            assertTrue(isNull(cursor, COLUMN_SUMMARY));
+            assertTrue(isNull(cursor, COLUMN_LAST_MODIFIED));
+            assertTrue(isNull(cursor, COLUMN_ICON));
+            assertEquals(
+                    COLUMN_FLAGS,
+                    DocumentsContract.Document.FLAG_SUPPORTS_DELETE |
+                    DocumentsContract.Document.FLAG_SUPPORTS_WRITE,
+                    cursor.getInt(9));
+            assertEquals(3 * 1024 * 1024, getInt(cursor, COLUMN_SIZE));
+            assertEquals(
+                    MtpDatabaseConstants.DOCUMENT_TYPE_OBJECT,
+                    getInt(cursor, COLUMN_DOCUMENT_TYPE));
+        }
     }
 
     public void testPutChildDocuments_operationsSupported() throws Exception {
@@ -332,8 +329,7 @@ public class MtpDatabaseTest extends AndroidTestCase {
                 new MtpRoot(0, 101, "Storage B", 1001, 0, "")
         });
 
-        {
-            final Cursor cursor = mDatabase.queryRootDocuments(columns);
+        try (final Cursor cursor = mDatabase.queryRootDocuments(columns)) {
             assertEquals(2, cursor.getCount());
             cursor.moveToNext();
             assertEquals(2, getInt(cursor, COLUMN_DOCUMENT_ID));
@@ -343,17 +339,14 @@ public class MtpDatabaseTest extends AndroidTestCase {
             assertEquals(3, getInt(cursor, COLUMN_DOCUMENT_ID));
             assertEquals(101, getInt(cursor, COLUMN_STORAGE_ID));
             assertEquals("Storage B", getString(cursor, COLUMN_DISPLAY_NAME));
-            cursor.close();
         }
 
         // Clear mapping and add a device.
         mDatabase.getMapper().clearMapping();
         addTestDevice();
 
-        {
-            final Cursor cursor = mDatabase.queryRootDocuments(columns);
+        try (final Cursor cursor = mDatabase.queryRootDocuments(columns)) {
             assertEquals(0, cursor.getCount());
-            cursor.close();
         }
 
         // Add two storages, but one's name is different from previous one.
@@ -364,9 +357,8 @@ public class MtpDatabaseTest extends AndroidTestCase {
         });
         mDatabase.getMapper().stopAddingDocuments("1");
 
-        {
+        try (final Cursor cursor = mDatabase.queryRootDocuments(columns)) {
             // After compeleting mapping, Storage A can be obtained with new storage ID.
-            final Cursor cursor = mDatabase.queryRootDocuments(columns);
             assertEquals(2, cursor.getCount());
             cursor.moveToNext();
             assertEquals(2, getInt(cursor, COLUMN_DOCUMENT_ID));
@@ -376,7 +368,6 @@ public class MtpDatabaseTest extends AndroidTestCase {
             assertEquals(4, getInt(cursor, COLUMN_DOCUMENT_ID));
             assertEquals(202, getInt(cursor, COLUMN_STORAGE_ID));
             assertEquals("Storage C", getString(cursor, COLUMN_DISPLAY_NAME));
-            cursor.close();
         }
     }
 
@@ -401,11 +392,9 @@ public class MtpDatabaseTest extends AndroidTestCase {
         addTestDevice();
         addTestStorage("1");
 
-        {
+        try (final Cursor cursor = mDatabase.queryChildDocuments(columns, "2")) {
             // Don't return objects that lost MTP object handles.
-            final Cursor cursor = mDatabase.queryChildDocuments(columns, "2");
             assertEquals(0, cursor.getCount());
-            cursor.close();
         }
 
         mDatabase.getMapper().startAddingDocuments("2");
@@ -415,8 +404,7 @@ public class MtpDatabaseTest extends AndroidTestCase {
         }, new long[] { 1024L, 1024L });
         mDatabase.getMapper().stopAddingDocuments("2");
 
-        {
-            final Cursor cursor = mDatabase.queryChildDocuments(columns, "2");
+        try (final Cursor cursor = mDatabase.queryChildDocuments(columns, "2")) {
             assertEquals(2, cursor.getCount());
 
             cursor.moveToNext();
@@ -428,8 +416,6 @@ public class MtpDatabaseTest extends AndroidTestCase {
             assertEquals(6, getInt(cursor, COLUMN_DOCUMENT_ID));
             assertEquals(203, getInt(cursor, COLUMN_OBJECT_HANDLE));
             assertEquals("video.mp4", getString(cursor, COLUMN_DISPLAY_NAME));
-
-            cursor.close();
         }
     }
 
@@ -459,8 +445,7 @@ public class MtpDatabaseTest extends AndroidTestCase {
                 new MtpRoot(1, 100, "Storage", 0, 0, "")
         });
 
-        {
-            final Cursor cursor = mDatabase.queryRootDocuments(columns);
+        try (final Cursor cursor = mDatabase.queryRootDocuments(columns)) {
             assertEquals(2, cursor.getCount());
             cursor.moveToNext();
             assertEquals(3, getInt(cursor, COLUMN_DOCUMENT_ID));
@@ -470,11 +455,9 @@ public class MtpDatabaseTest extends AndroidTestCase {
             assertEquals(4, getInt(cursor, COLUMN_DOCUMENT_ID));
             assertEquals(100, getInt(cursor, COLUMN_STORAGE_ID));
             assertEquals("Storage", getString(cursor, COLUMN_DISPLAY_NAME));
-            cursor.close();
         }
 
-        {
-            final Cursor cursor = mDatabase.queryRoots(resources, rootColumns);
+        try (final Cursor cursor = mDatabase.queryRoots(resources, rootColumns)) {
             assertEquals(2, cursor.getCount());
             cursor.moveToNext();
             assertEquals(1, getInt(cursor, Root.COLUMN_ROOT_ID));
@@ -482,7 +465,6 @@ public class MtpDatabaseTest extends AndroidTestCase {
             cursor.moveToNext();
             assertEquals(2, getInt(cursor, Root.COLUMN_ROOT_ID));
             assertEquals(0, getInt(cursor, Root.COLUMN_AVAILABLE_BYTES));
-            cursor.close();
         }
 
         mDatabase.getMapper().clearMapping();
@@ -505,8 +487,7 @@ public class MtpDatabaseTest extends AndroidTestCase {
         mDatabase.getMapper().stopAddingDocuments("1");
         mDatabase.getMapper().stopAddingDocuments("2");
 
-        {
-            final Cursor cursor = mDatabase.queryRootDocuments(columns);
+        try (final Cursor cursor = mDatabase.queryRootDocuments(columns)) {
             assertEquals(2, cursor.getCount());
             cursor.moveToNext();
             assertEquals(3, getInt(cursor, COLUMN_DOCUMENT_ID));
@@ -516,11 +497,9 @@ public class MtpDatabaseTest extends AndroidTestCase {
             assertEquals(4, getInt(cursor, COLUMN_DOCUMENT_ID));
             assertEquals(300, getInt(cursor, COLUMN_STORAGE_ID));
             assertEquals("Storage", getString(cursor, COLUMN_DISPLAY_NAME));
-            cursor.close();
         }
 
-        {
-            final Cursor cursor = mDatabase.queryRoots(resources, rootColumns);
+        try (final Cursor cursor = mDatabase.queryRoots(resources, rootColumns)) {
             assertEquals(2, cursor.getCount());
             cursor.moveToNext();
             assertEquals(1, getInt(cursor, Root.COLUMN_ROOT_ID));
@@ -528,7 +507,6 @@ public class MtpDatabaseTest extends AndroidTestCase {
             cursor.moveToNext();
             assertEquals(2, getInt(cursor, Root.COLUMN_ROOT_ID));
             assertEquals(3000, getInt(cursor, Root.COLUMN_AVAILABLE_BYTES));
-            cursor.close();
         }
     }
 
@@ -643,22 +621,18 @@ public class MtpDatabaseTest extends AndroidTestCase {
         });
         mDatabase.getMapper().stopAddingDocuments("1");
 
-        {
-            final Cursor cursor = mDatabase.queryRootDocuments(columns);
+        try (final Cursor cursor = mDatabase.queryRootDocuments(columns)) {
             assertEquals(1, cursor.getCount());
             cursor.moveToNext();
             assertEquals(2, getInt(cursor, COLUMN_DOCUMENT_ID));
             assertEquals(300, getInt(cursor, COLUMN_STORAGE_ID));
             assertEquals("Storage", getString(cursor, COLUMN_DISPLAY_NAME));
-            cursor.close();
         }
-        {
-            final Cursor cursor = mDatabase.queryRoots(resources, rootColumns);
+        try (final Cursor cursor = mDatabase.queryRoots(resources, rootColumns)) {
             assertEquals(1, cursor.getCount());
             cursor.moveToNext();
             assertEquals(1, getInt(cursor, Root.COLUMN_ROOT_ID));
             assertEquals(3000, getInt(cursor, Root.COLUMN_AVAILABLE_BYTES));
-            cursor.close();
         }
     }
 
@@ -685,8 +659,7 @@ public class MtpDatabaseTest extends AndroidTestCase {
         });
         mDatabase.getMapper().stopAddingDocuments("1");
 
-        {
-            final Cursor cursor = mDatabase.queryRootDocuments(columns);
+        try (final Cursor cursor = mDatabase.queryRootDocuments(columns)) {
             assertEquals(2, cursor.getCount());
 
             // First storage reuse document ID of previous storage.
@@ -701,8 +674,6 @@ public class MtpDatabaseTest extends AndroidTestCase {
             assertEquals(3, getInt(cursor, COLUMN_DOCUMENT_ID));
             assertEquals(201, getInt(cursor, COLUMN_STORAGE_ID));
             assertEquals("Storage", getString(cursor, COLUMN_DISPLAY_NAME));
-
-            cursor.close();
         }
     }
 
@@ -728,13 +699,13 @@ public class MtpDatabaseTest extends AndroidTestCase {
                     MtpDatabaseConstants.COLUMN_STORAGE_ID,
                     DocumentsContract.Document.COLUMN_DISPLAY_NAME
             };
-            final Cursor cursor = mDatabase.queryRootDocuments(columns);
-            assertEquals(1, cursor.getCount());
-            cursor.moveToNext();
-            assertEquals(2, getInt(cursor, COLUMN_DOCUMENT_ID));
-            assertEquals(100, getInt(cursor, COLUMN_STORAGE_ID));
-            assertEquals("Storage B", getString(cursor, COLUMN_DISPLAY_NAME));
-            cursor.close();
+            try (final Cursor cursor = mDatabase.queryRootDocuments(columns)) {
+                assertEquals(1, cursor.getCount());
+                cursor.moveToNext();
+                assertEquals(2, getInt(cursor, COLUMN_DOCUMENT_ID));
+                assertEquals(100, getInt(cursor, COLUMN_STORAGE_ID));
+                assertEquals("Storage B", getString(cursor, COLUMN_DISPLAY_NAME));
+            }
         }
         {
             final String[] columns = new String[] {
@@ -742,13 +713,13 @@ public class MtpDatabaseTest extends AndroidTestCase {
                     Root.COLUMN_TITLE,
                     Root.COLUMN_AVAILABLE_BYTES
             };
-            final Cursor cursor = mDatabase.queryRoots(resources, columns);
-            assertEquals(1, cursor.getCount());
-            cursor.moveToNext();
-            assertEquals(1, getInt(cursor, Root.COLUMN_ROOT_ID));
-            assertEquals("Device Storage B", getString(cursor, Root.COLUMN_TITLE));
-            assertEquals(1000, getInt(cursor, Root.COLUMN_AVAILABLE_BYTES));
-            cursor.close();
+            try (final Cursor cursor = mDatabase.queryRoots(resources, columns)) {
+                assertEquals(1, cursor.getCount());
+                cursor.moveToNext();
+                assertEquals(1, getInt(cursor, Root.COLUMN_ROOT_ID));
+                assertEquals("Device Storage B", getString(cursor, Root.COLUMN_TITLE));
+                assertEquals(1000, getInt(cursor, Root.COLUMN_AVAILABLE_BYTES));
+            }
         }
     }
 
@@ -839,12 +810,10 @@ public class MtpDatabaseTest extends AndroidTestCase {
         mDatabase.getMapper().stopAddingDocuments("1");
 
         // It the device has multiple storages, it shows a device root.
-        {
-            final Cursor cursor = mDatabase.queryRoots(resources, strings(Root.COLUMN_TITLE));
+        try (final Cursor cursor = mDatabase.queryRoots(resources, strings(Root.COLUMN_TITLE))) {
             assertEquals(1, cursor.getCount());
             cursor.moveToNext();
             assertEquals("Device", cursor.getString(0));
-            cursor.close();
         }
     }
 
@@ -884,20 +853,16 @@ public class MtpDatabaseTest extends AndroidTestCase {
 
         mDatabase.deleteDocument("3");
 
-        {
+        try (final Cursor cursor =
+                    mDatabase.queryChildDocuments(strings(Document.COLUMN_DOCUMENT_ID), "2")) {
             // Do not query deleted documents.
-            final Cursor cursor =
-                    mDatabase.queryChildDocuments(strings(Document.COLUMN_DOCUMENT_ID), "2");
             assertEquals(0, cursor.getCount());
-            cursor.close();
         }
 
-        {
+        try (final Cursor cursor =
+                    mDatabase.queryDocument("4", strings(Document.COLUMN_DOCUMENT_ID))) {
             // Child document should be deleted also.
-            final Cursor cursor =
-                    mDatabase.queryDocument("4", strings(Document.COLUMN_DOCUMENT_ID));
             assertEquals(0, cursor.getCount());
-            cursor.close();
         }
     }
 
@@ -912,13 +877,11 @@ public class MtpDatabaseTest extends AndroidTestCase {
                         createDocument(200, "note.txt", MtpConstants.FORMAT_TEXT, 1024),
                         1024L));
 
-        {
-            final Cursor cursor =
-                    mDatabase.queryChildDocuments(strings(Document.COLUMN_DOCUMENT_ID), "2");
+        try (final Cursor cursor =
+                    mDatabase.queryChildDocuments(strings(Document.COLUMN_DOCUMENT_ID), "2")) {
             assertEquals(1, cursor.getCount());
             cursor.moveToNext();
             assertEquals("3", cursor.getString(0));
-            cursor.close();
         }
 
         // The new document should not be mapped with existing invalidated document.
@@ -933,13 +896,11 @@ public class MtpDatabaseTest extends AndroidTestCase {
                 1024L);
         mDatabase.getMapper().stopAddingDocuments("2");
 
-        {
-            final Cursor cursor =
-                    mDatabase.queryChildDocuments(strings(Document.COLUMN_DOCUMENT_ID), "2");
+        try (final Cursor cursor =
+                    mDatabase.queryChildDocuments(strings(Document.COLUMN_DOCUMENT_ID), "2")) {
             assertEquals(1, cursor.getCount());
             cursor.moveToNext();
             assertEquals("4", cursor.getString(0));
-            cursor.close();
         }
     }
 
