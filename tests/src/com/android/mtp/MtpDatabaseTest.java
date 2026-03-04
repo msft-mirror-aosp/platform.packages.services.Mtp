@@ -1114,7 +1114,7 @@ public class MtpDatabaseTest extends AndroidTestCase {
             assertEquals(5, cursor.getCount());
             cursor.moveToNext();
             assertEquals("audio.m4a", cursor.getString(0));
-            assertEquals("audio/mp4", cursor.getString(1));
+            assertEquals("audio/mpeg", cursor.getString(1));
             cursor.moveToNext();
             assertEquals("video.m4v", cursor.getString(0));
             assertEquals("video/mp4", cursor.getString(1));
@@ -1123,10 +1123,10 @@ public class MtpDatabaseTest extends AndroidTestCase {
             // video or audio.
             assertEquals("unknown.mp4", cursor.getString(0));
             assertEquals("video/mp4", cursor.getString(1));
-            // Don't return mime type that is inconsistent with format code.
+            // Prioritize file extension over MTP format code for MIME type mapping.
             cursor.moveToNext();
             assertEquals("inconsistent.txt", cursor.getString(0));
-            assertEquals("video/mpeg", cursor.getString(1));
+            assertEquals("text/plain", cursor.getString(1));
             cursor.moveToNext();
             assertEquals("noext", cursor.getString(0));
             assertEquals("application/octet-stream", cursor.getString(1));
